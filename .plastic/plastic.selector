@@ -1,0 +1,4 @@
+repository "sdk-integration"
+  path "/"
+    br "/main"
+    co "/main"
