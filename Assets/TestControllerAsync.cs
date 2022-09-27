@@ -4,7 +4,9 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using TMPro;
 using Tradelite.SDK.DAO;
+using Tradelite.SDK.Model.KbScope;
 using Tradelite.SDK.Model.UserScope;
+using Tradelite.SDK.Service.KbScope;
 using Tradelite.SDK.Service.UserScope;
 using UnityEngine;
 using UnityEngine.UI;
@@ -52,6 +54,16 @@ public class TestControllerAsync : MonoBehaviour {
             }
 
         }
+    }
+
+    [ContextMenu("Get Categories (async)")]
+    public async void _A_GetCategories()
+    {
+        CategoryService categoryService = CategoryService.GetInstance();
+        string[] categoryIds = await categoryService.GetIds();
+        feedbackTextField.text = $"{categoryIds.Length} category ids retrieved.";
+        Category[] categories = await categoryService.GetByIds(categoryIds);
+        feedbackTextField.text = "Categories retrieved. Example: " + categories[0].title;
     }
 
 }

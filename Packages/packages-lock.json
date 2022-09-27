@@ -181,10 +181,11 @@
       }
     },
     "net.tradelite.sdk.unity": {
-      "version": "file:/Users/dderrien-tl/Code/Tradelite/unity-sdk",
+      "version": "https://github.com/TradeliteOrganization/unity-sdk.git",
       "depth": 0,
-      "source": "local",
-      "dependencies": {}
+      "source": "git",
+      "dependencies": {},
+      "hash": "1e0b8debce920bc781dbf1eaba0c874177274ef9"
     },
     "com.unity.modules.ai": {
       "version": "1.0.0",
