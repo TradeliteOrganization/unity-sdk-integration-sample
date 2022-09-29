@@ -107,6 +107,15 @@
       },
       "url": "https://packages.unity.com"
     },
+    "com.unity.ide.visualstudio": {
+      "version": "2.0.16",
+      "depth": 0,
+      "source": "registry",
+      "dependencies": {
+        "com.unity.test-framework": "1.1.9"
+      },
+      "url": "https://packages.unity.com"
+    },
     "com.unity.ide.vscode": {
       "version": "1.2.5",
       "depth": 0,
@@ -181,11 +190,11 @@
       }
     },
     "net.tradelite.sdk.unity": {
-      "version": "https://github.com/TradeliteOrganization/unity-sdk.git",
+      "version": "https://github.com/TradeliteOrganization/unity-http2-sdk.git",
       "depth": 0,
       "source": "git",
       "dependencies": {},
-      "hash": "1e0b8debce920bc781dbf1eaba0c874177274ef9"
+      "hash": "0c9370c50e5b87c360a3e0e07854d7727223e022"
     },
     "com.unity.modules.ai": {
       "version": "1.0.0",
