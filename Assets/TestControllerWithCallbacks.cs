@@ -1,8 +1,8 @@
 using System.Collections;
 using System.Collections.Generic;
-using Tradelite.SDK.Model;
-using Tradelite.SDK.Model.UserScope;
-using Tradelite.SDK.Service.UserScope;
+using TradeliteSDK.Model;
+using TradeliteSDK.Model.UserScope;
+using TradeliteSDK.Service.UserScope;
 using UnityEngine;
 
 

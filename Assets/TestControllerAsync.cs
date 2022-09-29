@@ -3,11 +3,11 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using TMPro;
-using Tradelite.SDK.DAO;
-using Tradelite.SDK.Model.KbScope;
-using Tradelite.SDK.Model.UserScope;
-using Tradelite.SDK.Service.KbScope;
-using Tradelite.SDK.Service.UserScope;
+using TradeliteSDK.DAO;
+using TradeliteSDK.Model.KbScope;
+using TradeliteSDK.Model.UserScope;
+using TradeliteSDK.Service.KbScope;
+using TradeliteSDK.Service.UserScope;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -40,7 +40,7 @@ public class TestControllerAsync : MonoBehaviour {
         else {
             try {
                 HttpDao<User>.jwtToken = jwtToken;
-            
+
                 UserService userService = UserService.GetInstance();
                 User user = await userService.Get("me");
                 Debug.Log($"Player: {user}");
