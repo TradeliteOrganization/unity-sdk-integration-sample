@@ -190,11 +190,10 @@
       }
     },
     "net.tradelite.sdk.unity": {
-      "version": "https://github.com/TradeliteOrganization/unity-http2-sdk.git",
+      "version": "file:/Users/dderrien-tl/Code/Tradelite/unity-http2-sdk",
       "depth": 0,
-      "source": "git",
-      "dependencies": {},
-      "hash": "0c9370c50e5b87c360a3e0e07854d7727223e022"
+      "source": "local",
+      "dependencies": {}
     },
     "com.unity.modules.ai": {
       "version": "1.0.0",
