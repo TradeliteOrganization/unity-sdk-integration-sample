@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using TMPro;
+using TradeliteSDK;
 using TradeliteSDK.DAO;
 using TradeliteSDK.Model.ConfigScope;
 using TradeliteSDK.Model.KbScope;
@@ -38,6 +39,8 @@ public class TestControllerAsync : MonoBehaviour {
     [SerializeField] Button answer2Button;
     [SerializeField] Button answer3Button;
     [SerializeField] Button answer4Button;
+    [SerializeField] Button createMatchButton;
+    [SerializeField] Button getNextQuestionIdButton;
 
     void Start() {
         feedbackTextField.text = "Provide a valid JWT Token to get the user info.";
@@ -45,13 +48,13 @@ public class TestControllerAsync : MonoBehaviour {
 
     [ContextMenu("Get User (async)")]
     public async void _A_GetUser() {
-        string jwtToken = jwtTokenInputField.text;
-        if (string.IsNullOrEmpty(jwtToken)) {
+        string jwt = jwtTokenInputField.text;
+        if (string.IsNullOrEmpty(jwt)) {
             feedbackTextField.text = "Missing JWT Token.";
             return;
         }
         try {
-            HttpDao<User>.jwtToken = jwtToken;
+            DataSource.SetActiveJWT(jwt);
 
             UserService service = UserService.GetInstance();
             User user = await service.Get("me");
@@ -167,4 +170,28 @@ public class TestControllerAsync : MonoBehaviour {
             "\nD: " + selectedAnswer.longText;
     }
 
+    private string currentQuizMatchId;
+
+    [ContextMenu("Validate Answer (async)")]
+    public async void _A_CreateMatch()
+    {
+        string categoryId = "finance";
+        string progressionMapId = "...";
+        QuizMatchService quizMatchService = QuizMatchService.GetInstance();
+        currentQuizMatchId = await quizMatchService.Create(categoryId, progressionMapId);
+        feedbackTextField.text = "New Quiz Match ID: " + currentQuizMatchId;
+    }
+
+    [ContextMenu("Validate Answer (async)")]
+    public async void _A_GetNextQuestionId()
+    {
+        //string currentTileId = "Easy";
+        string currentTileId = "Medium";
+        //string currentTileId = "Hard";
+        questionIdField.text = "Loading...";
+        QuizMatchService quizMatchService = QuizMatchService.GetInstance();
+        string questionId = await quizMatchService.GetNextQuestionId(currentQuizMatchId, currentTileId);
+        feedbackTextField.text = "New Question ID ready";
+        questionIdField.text = questionId;
+    }
 }
