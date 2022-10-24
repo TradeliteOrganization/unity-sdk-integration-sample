@@ -25,22 +25,17 @@ public class TestControllerAsync : MonoBehaviour {
     }
 
     [SerializeField] TMP_Text feedbackTextField;
+
     [SerializeField] TMP_InputField jwtTokenInputField;
     [SerializeField] TMP_Text userIdTextField;
     [SerializeField] TMP_Text nicknameTextField;
-    [SerializeField] Button getUserButton;
+
     [SerializeField] TMP_Text categoryIdsTextField;
-    [SerializeField] Button saveMapButton;
-    [SerializeField] Button loadMapButton;
+
     [SerializeField] TMP_InputField questionIdField;
-    [SerializeField] Button loadQuestionButton;
     [SerializeField] TMP_Text questionTextField;
-    [SerializeField] Button answer1Button;
-    [SerializeField] Button answer2Button;
-    [SerializeField] Button answer3Button;
-    [SerializeField] Button answer4Button;
-    [SerializeField] Button createMatchButton;
-    [SerializeField] Button getNextQuestionIdButton;
+
+    [SerializeField] TMP_Text matchInfoTextField;
 
     void Start() {
         feedbackTextField.text = "Provide a valid JWT Token to get the user info.";
@@ -54,6 +49,7 @@ public class TestControllerAsync : MonoBehaviour {
             return;
         }
         try {
+            feedbackTextField.text = "Loading...";
             DataSource.SetActiveJWT(jwt);
 
             UserService service = UserService.GetInstance();
@@ -61,8 +57,8 @@ public class TestControllerAsync : MonoBehaviour {
             Debug.Log($"Player: {user}");
 
             feedbackTextField.text = "User data retrieved.";
-            userIdTextField.text = user.id;
-            nicknameTextField.text = user.nickname;
+            userIdTextField.text = "Id: " + user.id.Substring(0, 20) + "...";
+            nicknameTextField.text = "Nickname: " + user.nickname;
         }
         catch (Exception)
         {
@@ -73,10 +69,13 @@ public class TestControllerAsync : MonoBehaviour {
     [ContextMenu("Get Categories (async)")]
     public async void _A_GetCategories()
     {
+        feedbackTextField.text = "Loading...";
         categoryIdsTextField.text = "";
+
         CategoryService service = CategoryService.GetInstance();
         string[] categoryIds = await service.GetIds();
         feedbackTextField.text = $"{categoryIds.Length} category ids retrieved.";
+
         Category[] categories = await service.GetByIds(categoryIds);
         for(int i=0; i<categories.Length; i++)
         {
@@ -84,8 +83,8 @@ public class TestControllerAsync : MonoBehaviour {
         }
     }
 
-    private string sceneName = "testScene";
-    private int levelId = 123;
+    private readonly string sceneName = "testScene";
+    private readonly int levelId = 123;
 
     [ContextMenu("Save Map (async)")]
     public async void _A_SaveMap()
@@ -102,6 +101,7 @@ public class TestControllerAsync : MonoBehaviour {
         TileLayer layer = new TileLayer() { tiles = tiles };
         WorldLevel level = new WorldLevel() { sceneName = sceneName, levelId = levelId, layers = new() { layer } };
 
+        feedbackTextField.text = "Saving...";
         WorldLevelService service = WorldLevelService.GetInstance();
         string id = await service.Create(level);
         feedbackTextField.text = $"World level created with id: {id}";
@@ -110,14 +110,74 @@ public class TestControllerAsync : MonoBehaviour {
     [ContextMenu("Load Map (async)")]
     public async void _A_LoadMap()
     {
+        feedbackTextField.text = "Loading...";
         WorldLevelService service = WorldLevelService.GetInstance();
         WorldLevel level = await service.Get(sceneName, levelId);
         feedbackTextField.text = $"World level read: {level}";
     }
 
+    private string currentQuizMatchId;
+    private int tileCoordinates;
+
+    [ContextMenu("Create match (async)")]
+    public async void _A_CreateMatch()
+    {
+        feedbackTextField.text = "Creating...";
+
+        string categoryId = "finance";
+        string progressionMapId = "...";
+        QuizMatchService quizMatchService = QuizMatchService.GetInstance();
+        currentQuizMatchId = await quizMatchService.Create(categoryId, progressionMapId);
+        feedbackTextField.text = "New Quiz Match ID: " + currentQuizMatchId;
+        tileCoordinates = 0;
+    }
+
+    private string tileId;
+
+    [ContextMenu("Get Next Question Id (async)")]
+    public async void _A_GetNextQuestionId()
+    {
+        feedbackTextField.text = "Loading...";
+
+        QuizMatchService quizMatchService = QuizMatchService.GetInstance();
+        QuizMatch info = await quizMatchService.Get(currentQuizMatchId);
+
+        if (info.matchStatus != QuizMatch.STATUS_IN_PROGRESS)
+        {
+            Boolean completed = info.matchStatus == QuizMatch.STATUS_COMPLETED;
+            feedbackTextField.text = $"Match {(completed ? "completed" : "canceled")}. You need to create a new one.";
+            return;
+        }
+        if (0 < tileCoordinates && info.playerHealth.HP <= 0)
+        {
+            feedbackTextField.text = "No more HP... You need to revive your character or to cancel the match...";
+            return;
+        }
+        if (info.enemyHealth.HP <= 0)
+        {
+            // Move to a new Tile b/c the enemy is dead on this one
+            tileCoordinates += 1;
+            int random = new System.Random().Next(3);
+            tileId = (random == 0 ? "Easy" : random == 1 ? "Medium" : "Hard") + ";" + tileCoordinates;
+        }
+        questionIdField.text = "Loading for: " + tileId;
+
+        try
+        {
+            string questionId = await quizMatchService.GetNextQuestionId(currentQuizMatchId, tileId);
+            feedbackTextField.text = "New Question ID ready";
+            questionIdField.text = questionId;
+        }
+        catch (Exception ex)
+        {
+            feedbackTextField.text = "Cannot get a next question id: " + ex.Message;
+        }
+
+    }
+
     private Question currentQuestion;
 
-    [ContextMenu("Get Quest (async)")]
+    [ContextMenu("Get Question (async)")]
     public async void _A_GetQuestion()
     {
         string questionId = questionIdField.text;
@@ -130,16 +190,19 @@ public class TestControllerAsync : MonoBehaviour {
         AnswerService answerService = AnswerService.GetInstance();
         try
         {
+            feedbackTextField.text = "Loading...";
+
             currentQuestion = await questionService.Get(questionId);
             Answer[] answers = await answerService.GetByIds(currentQuestion.answerIds);
 
             questionTextField.text = "\ndF: " + currentQuestion.difficultyLevel +
                 "\nCat.: [" + String.Join(", ", currentQuestion.categoryIds) + "]" +
                 "\nQ: " + currentQuestion.shortText;
-            for(int i=0; i<answers.Length; i++)
+            for (int i = 0; i < answers.Length; i++)
             {
-                questionTextField.text += $"\n- A{i+1}: " + answers[i].shortText;
+                questionTextField.text += $"\n- A{i + 1}: " + answers[i].shortText;
             }
+            feedbackTextField.text = "Question ready";
         }
         catch (Exception)
         {
@@ -155,6 +218,8 @@ public class TestControllerAsync : MonoBehaviour {
             feedbackTextField.text = "No question loaded yet!";
             return;
         }
+        feedbackTextField.text = "Checking...";
+
         string answerId = currentQuestion.answerIds[position];
         AnswerService answerService = AnswerService.GetInstance();
         Answer selectedAnswer = await answerService.Get(answerId);
@@ -163,35 +228,117 @@ public class TestControllerAsync : MonoBehaviour {
                 "\nQ: " + currentQuestion.shortText +
                 "\n- A: " + selectedAnswer.shortText;
 
-        SolutionService solutionService = SolutionService.GetInstance();
-        Boolean isCorrect = await solutionService.IsCorrectAnswer(currentQuestion.id, answerId);
-        feedbackTextField.text = isCorrect ? "Congratulations" : "Sorry, you selected a wrong answer";
-        questionTextField.text += "\n\nF: " + (isCorrect ? "Good choice" : "Wrong choice") +
-            "\nD: " + selectedAnswer.longText;
+        try
+        {
+            QuizMatchService quizMatchService = QuizMatchService.GetInstance();
+            Boolean isCorrect = await quizMatchService.CheckAnswer(currentQuizMatchId, answerId);
+            //SolutionService solutionService = SolutionService.GetInstance();
+            //Boolean isCorrect = await solutionService.IsCorrectAnswer(currentQuestion.id, answerId);
+            feedbackTextField.text = isCorrect ? "Congratulations" : "Sorry, you selected a wrong answer";
+            questionTextField.text += "\n\nF: " + (isCorrect ? "Good choice" : "Wrong choice") +
+                "\nD: " + selectedAnswer.longText;
+        }
+        catch (Exception)
+        {
+            feedbackTextField.text = "Could not verify the answer :(";
+        }
     }
 
-    private string currentQuizMatchId;
-
-    [ContextMenu("Validate Answer (async)")]
-    public async void _A_CreateMatch()
+    [ContextMenu("Get Quiz Match Info (async)")]
+    public async void _A_GetMatchInfo()
     {
-        string categoryId = "finance";
-        string progressionMapId = "...";
+        feedbackTextField.text = "Loading...";
+
         QuizMatchService quizMatchService = QuizMatchService.GetInstance();
-        currentQuizMatchId = await quizMatchService.Create(categoryId, progressionMapId);
-        feedbackTextField.text = "New Quiz Match ID: " + currentQuizMatchId;
+        QuizMatch info = await quizMatchService.Get(currentQuizMatchId);
+        matchInfoTextField.text = "";
+        matchInfoTextField.text += "matchStatus: " + info.matchStatus + "\n";
+        matchInfoTextField.text += "eloRatingStart: " + info.eloRatingStart + "\n";
+        matchInfoTextField.text += "eloRatingEnd: " + info.eloRatingEnd + "\n";
+        matchInfoTextField.text += "playerHealth: " + info.playerHealth.HP + " HP\n";
+        matchInfoTextField.text += "enemyHealth: " + info.enemyHealth.HP + " HP\n";
+        matchInfoTextField.text += "resurrectionNb: " + info.resurrectionNb + "\n";
+        matchInfoTextField.text += "chestPoints: " + info.chestPoints + "\n";
+        matchInfoTextField.text += "activeTile.id: " + info.activeTile.id + "\n";
+        feedbackTextField.text = "Match info loaded";
     }
 
-    [ContextMenu("Validate Answer (async)")]
-    public async void _A_GetNextQuestionId()
+    [ContextMenu("Swap Question (async)")]
+    public async void _A_SwapQuestion()
     {
-        //string currentTileId = "Easy";
-        string currentTileId = "Medium";
-        //string currentTileId = "Hard";
-        questionIdField.text = "Loading...";
+        feedbackTextField.text = "Loading...";
+        questionIdField.text = "Loading for: " + tileId;
+
         QuizMatchService quizMatchService = QuizMatchService.GetInstance();
-        string questionId = await quizMatchService.GetNextQuestionId(currentQuizMatchId, currentTileId);
+        string questionId = await quizMatchService.SwapQuestion(currentQuizMatchId);
+
         feedbackTextField.text = "New Question ID ready";
         questionIdField.text = questionId;
+    }
+
+    [ContextMenu("Remove one Answer (async)")]
+    public async void _A_RemoveOneAnswer()
+    {
+        feedbackTextField.text = "Loading...";
+
+        QuizMatchService quizMatchService = QuizMatchService.GetInstance();
+        AnswerService answerService = AnswerService.GetInstance();
+        try
+        {
+            feedbackTextField.text = "Loading...";
+
+            string removedAnswerId = await quizMatchService.RemoveOneAnswer(currentQuizMatchId);
+
+            Answer[] answers = await answerService.GetByIds(currentQuestion.answerIds);
+
+            questionTextField.text = "\ndF: " + currentQuestion.difficultyLevel +
+                "\nCat.: [" + String.Join(", ", currentQuestion.categoryIds) + "]" +
+                "\nQ: " + currentQuestion.shortText;
+            for (int i = 0; i < answers.Length; i++)
+            {
+                if (answers[i].id != removedAnswerId)
+                {
+                    questionTextField.text += $"\n- A{i + 1}: " + answers[i].shortText;
+                }
+            }
+            feedbackTextField.text = "Question ready";
+        }
+        catch (Exception)
+        {
+            feedbackTextField.text = "Cannot get a next question";
+        }
+    }
+
+    [ContextMenu("Heal w/ Video (async)")]
+    public async void _A_HealWithVideo()
+    {
+        feedbackTextField.text = "Loading...";
+
+        QuizMatchService quizMatchService = QuizMatchService.GetInstance();
+        int hpIncrease = await quizMatchService.HealWithVideo(currentQuizMatchId, "382948324321");
+
+        feedbackTextField.text = $"{hpIncrease} HP added to your health record.";
+    }
+
+    [ContextMenu("Revive with Money (async)")]
+    public async void _A_ReviveWithMoney()
+    {
+        feedbackTextField.text = "Loading...";
+
+        QuizMatchService quizMatchService = QuizMatchService.GetInstance();
+        int newHP = await quizMatchService.ResurrectWithMoney(currentQuizMatchId);
+
+        feedbackTextField.text = $"Your HP has been restored to: {newHP}";
+    }
+
+    [ContextMenu("Cancel Match (async)")]
+    public async void _A_CancelMatch()
+    {
+        feedbackTextField.text = "Loading...";
+
+        QuizMatchService quizMatchService = QuizMatchService.GetInstance();
+        Boolean success = await quizMatchService.CancelMatch(currentQuizMatchId);
+
+        feedbackTextField.text = success ? "Match canceled" : "Could not cancel the match...";
     }
 }
