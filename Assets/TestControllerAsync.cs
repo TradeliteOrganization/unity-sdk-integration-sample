@@ -124,7 +124,7 @@ public class TestControllerAsync : MonoBehaviour {
     {
         feedbackTextField.text = "Creating...";
 
-        string categoryId = "finance";
+        string categoryId = "economics";
         string progressionMapId = "...";
         QuizMatchService quizMatchService = QuizMatchService.GetInstance();
         currentQuizMatchId = await quizMatchService.Create(categoryId, progressionMapId);
