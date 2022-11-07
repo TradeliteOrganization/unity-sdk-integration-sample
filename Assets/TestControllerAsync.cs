@@ -341,4 +341,42 @@ public class TestControllerAsync : MonoBehaviour {
 
         feedbackTextField.text = success ? "Match canceled" : "Could not cancel the match...";
     }
+
+    [ContextMenu("Timer Ran Out (async)")]
+    public async void _A_TimerRanOut()
+    {
+        feedbackTextField.text = "Loading...";
+
+        QuizMatchService quizMatchService = QuizMatchService.GetInstance();
+        int newHP = await quizMatchService.TimerRanOut(currentQuizMatchId);
+
+        feedbackTextField.text = newHP <= 0 ? "You don't have HP anymore!" : "Get next question id.";
+    }
+
+    [ContextMenu("Get Game Stats (async)")]
+    public async void _A_GetGameStats()
+    {
+        feedbackTextField.text = "Loading...";
+
+        GameStatsService gameStatsService = GameStatsService.GetInstance();
+        GameStats gameStats = await gameStatsService.Get();
+        matchInfoTextField.text = "";
+        matchInfoTextField.text += "playerHealth: " + gameStats.playerHealth + "\n";
+        matchInfoTextField.text += "quizGameStats: " + gameStats.quizGameStats + "\n";
+        
+        feedbackTextField.text = "Game stats info loaded";
+    }
+
+    [ContextMenu("Get Wallet (async)")]
+    public async void _A_GetWallet()
+    {
+        feedbackTextField.text = "Loading...";
+
+        WalletService walletService = WalletService.GetInstance();
+        Wallet wallet = await walletService.Get();
+        matchInfoTextField.text = "";
+        matchInfoTextField.text += "assets: {" + wallet.assets + "}\n";
+        
+        feedbackTextField.text = "Wallet info loaded";
+    }
 }
