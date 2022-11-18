@@ -83,6 +83,31 @@ public class TestControllerAsync : MonoBehaviour {
         }
     }
 
+    [ContextMenu("Get Quiz Progression (async)")]
+    public async void _A_GetQuizProgressions()
+    {
+        feedbackTextField.text = "Loading...";
+        categoryIdsTextField.text = "";
+
+        QuizProgressionService service = QuizProgressionService.GetInstance();
+        QuizProgression progression = await service.Get("economics");
+        categoryIdsTextField.text = $"Progression for 'economics': {progression}";
+        feedbackTextField.text = $"Progression for 'economics' retrieved";
+    }
+
+    [ContextMenu("Get App Metrics (async)")]
+    public async void _A_GetAppMetrics()
+    {
+        feedbackTextField.text = "Loading...";
+        categoryIdsTextField.text = "";
+
+        AppMetricsService service = AppMetricsService.GetInstance();
+        AppMetrics metrics = await service.Get("whatever");
+        categoryIdsTextField.text = metrics.ToString();
+        UnityEngine.Debug.Log(metrics.ToString());
+        feedbackTextField.text = $"Metrics retrieved";
+    }
+
     private readonly string sceneName = "testScene";
     private readonly int levelId = 123;
 
@@ -361,6 +386,7 @@ public class TestControllerAsync : MonoBehaviour {
         GameStatsService gameStatsService = GameStatsService.GetInstance();
         GameStats gameStats = await gameStatsService.Get();
         matchInfoTextField.text = "";
+        matchInfoTextField.text += "experienceLevel: " + gameStats.experienceLevel + "\n";
         matchInfoTextField.text += "playerHealth: " + gameStats.playerHealth + "\n";
         matchInfoTextField.text += "quizGameStats: " + gameStats.quizGameStats + "\n";
         
