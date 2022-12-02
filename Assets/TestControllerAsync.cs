@@ -192,6 +192,7 @@ public class TestControllerAsync : MonoBehaviour {
             string questionId = await quizMatchService.GetNextQuestionId(currentQuizMatchId, tileId);
             feedbackTextField.text = "New Question ID ready";
             questionIdField.text = questionId;
+            alreadyRemovedAnswerId = null;
         }
         catch (Exception ex)
         {
@@ -225,7 +226,16 @@ public class TestControllerAsync : MonoBehaviour {
                 "\nQ: " + currentQuestion.shortText;
             for (int i = 0; i < answers.Length; i++)
             {
-                questionTextField.text += $"\n- A{i + 1}: " + answers[i].shortText;
+                if (answers[i].id != alreadyRemovedAnswerId)
+                {
+                    if (answers[i].id == currentQuestion.rightAnswerId) {
+                        questionTextField.text += $"\n* A{i + 1}: " + answers[i].shortText;
+                    }
+                    else
+                    {
+                        questionTextField.text += $"\n- A{i + 1}: " + answers[i].shortText;
+                    }
+                }
             }
             feedbackTextField.text = "Question ready";
         }
@@ -257,8 +267,6 @@ public class TestControllerAsync : MonoBehaviour {
         {
             QuizMatchService quizMatchService = QuizMatchService.GetInstance();
             Boolean isCorrect = await quizMatchService.CheckAnswer(currentQuizMatchId, answerId);
-            //SolutionService solutionService = SolutionService.GetInstance();
-            //Boolean isCorrect = await solutionService.IsCorrectAnswer(currentQuestion.id, answerId);
             feedbackTextField.text = isCorrect ? "Congratulations" : "Sorry, you selected a wrong answer";
             questionTextField.text += "\n\nF: " + (isCorrect ? "Good choice" : "Wrong choice") +
                 "\nD: " + selectedAnswer.longText;
@@ -280,11 +288,12 @@ public class TestControllerAsync : MonoBehaviour {
         matchInfoTextField.text += "matchStatus: " + info.matchStatus + "\n";
         matchInfoTextField.text += "eloRatingStart: " + info.eloRatingStart + "\n";
         matchInfoTextField.text += "eloRatingEnd: " + info.eloRatingEnd + "\n";
-        matchInfoTextField.text += "playerHealth: " + info.playerHealth.HP + " HP\n";
+        matchInfoTextField.text += "playerHealth: " + info.playerHealth.HP + "/" + info.maxHP + " HP\n";
         matchInfoTextField.text += "enemyHealth: " + info.enemyHealth.HP + " HP\n";
         matchInfoTextField.text += "resurrectionNb: " + info.resurrectionNb + "\n";
         matchInfoTextField.text += "chestPoints: " + info.chestPoints + "\n";
         matchInfoTextField.text += "activeTile.id: " + info.activeTile.id + "\n";
+        matchInfoTextField.text += "rewardDetails: " + info.rewardDetails + "\n";
         feedbackTextField.text = "Match info loaded";
     }
 
@@ -299,7 +308,10 @@ public class TestControllerAsync : MonoBehaviour {
 
         feedbackTextField.text = "New Question ID ready";
         questionIdField.text = questionId;
+        alreadyRemovedAnswerId = null;
     }
+
+    private string alreadyRemovedAnswerId;
 
     [ContextMenu("Remove one Answer (async)")]
     public async void _A_RemoveOneAnswer()
@@ -321,16 +333,17 @@ public class TestControllerAsync : MonoBehaviour {
                 "\nQ: " + currentQuestion.shortText;
             for (int i = 0; i < answers.Length; i++)
             {
-                if (answers[i].id != removedAnswerId)
+                if (answers[i].id != removedAnswerId && answers[i].id != alreadyRemovedAnswerId)
                 {
                     questionTextField.text += $"\n- A{i + 1}: " + answers[i].shortText;
                 }
             }
+            alreadyRemovedAnswerId = removedAnswerId; // Can only remove two answers
             feedbackTextField.text = "Question ready";
         }
         catch (Exception)
         {
-            feedbackTextField.text = "Cannot get a next question";
+            feedbackTextField.text = "Cannot remove an answer";
         }
     }
 
