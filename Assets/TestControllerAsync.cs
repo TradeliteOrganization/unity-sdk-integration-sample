@@ -10,6 +10,7 @@ using TradeliteSDK.Model.KbScope;
 using TradeliteSDK.Model.UserScope;
 using TradeliteSDK.Service.ConfigScope;
 using TradeliteSDK.Service.KbScope;
+using TradeliteSDK.Service.StoreScope;
 using TradeliteSDK.Service.UserScope;
 using UnityEngine;
 using UnityEngine.UI;
@@ -79,7 +80,8 @@ public class TestControllerAsync : MonoBehaviour {
         Category[] categories = await service.GetByIds(categoryIds);
         for(int i=0; i<categories.Length; i++)
         {
-            categoryIdsTextField.text += categories[i].title + "\n";
+            // categoryIdsTextField.text += categories[i].title + "\n";
+            categoryIdsTextField.text += categories[i].titles.Get("en") + "\n";
         }
     }
 
@@ -417,5 +419,57 @@ public class TestControllerAsync : MonoBehaviour {
         matchInfoTextField.text += "assets: {" + wallet.assets + "}\n";
         
         feedbackTextField.text = "Wallet info loaded";
+    }
+
+    [ContextMenu("Get Currency with Ad (async)")]
+    public async void _B_GetCurrencyWithAd()
+    {
+        feedbackTextField.text = "Loading...";
+
+        try {
+            PurchaseTrackerService trackerService = PurchaseTrackerService.GetInstance();
+            await trackerService.ReportBoughtCurrencyWithAds("(cpk)10g-ads", "an-advertisement-id");
+            
+            feedbackTextField.text = "Currency bought with an Ad";
+        }
+        catch (Exception ex)
+        {
+            feedbackTextField.text = "Currency purchase w/ advertisement failed -- " + ex.Message;
+        }
+    }
+
+    [ContextMenu("Get Currency with IAP (async)")]
+    public async void _B_GetCurrencyWithIAP()
+    {
+        feedbackTextField.text = "Loading...";
+
+        try {
+            PurchaseTrackerService trackerService = PurchaseTrackerService.GetInstance();
+            await trackerService.ReportBoughtCurrencyWithIAP("(cpk)50g-iap", "a-transaction-id", "google");
+        
+            feedbackTextField.text = "Currency bought with IAP";
+        }
+        catch (Exception ex)
+        {
+            feedbackTextField.text = "Currency in-app purchase failed -- " + ex.Message;
+        }
+    }
+
+    [ContextMenu("Get Currency with Voucher (async)")]
+    public async void _B_GetCurrencyWithVoucher()
+    {
+        feedbackTextField.text = "Loading...";
+
+        try {
+            PurchaseTrackerService trackerService = PurchaseTrackerService.GetInstance();
+            // await trackerService.ReportBoughtCurrencyWithVoucher("(vch)expired-voucher");
+            await trackerService.ReportBoughtCurrencyWithVoucher("(vch)unlimited-voucher");
+       
+            feedbackTextField.text = "Currency bought with Voucher";
+        }
+        catch (Exception ex)
+        {
+            feedbackTextField.text = "Currency purchase w/ voucher failed -- " + ex.Message;
+        }
     }
 }
